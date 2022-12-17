@@ -12,4 +12,4 @@ If this pipeline is used in published work, please cite [2212.XXXXX](https://arx
 
 - I-Kai Chen
 - Marius Kongsore
-- Ken van Tilburg
+- Ken Van Tilburg
