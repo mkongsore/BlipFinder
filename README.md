@@ -37,7 +37,7 @@ To run the analysis, data and source information must be placed with the correct
 5. `blip_fit.py`
 6. `blip_multinest.py`
 
-where the only line that needs to be changed in each script is the `job_idx` variable. This indexes over all files in the `Data` folder and is by default set to 0. To parallelize the pipeline on a slurm-based computing cluster, one may replace `Data` with int(sys.argv[1]) and instead batch submit a job array, e.g. via the `significant_plot.ipynb` Jupyter notebook in the `Analysis` folder.
+where the only line that needs to be changed in each script is the `job_idx` variable. This indexes over all files in the `Data` folder and is by default set to 0. To parallelize the pipeline on a slurm-based computing cluster, one may replace `Data` with int(sys.argv[1]) and instead batch submit a job array, e.g. via the script
 
 ````
 #!/bin/bash
@@ -57,7 +57,7 @@ python free_fit.py ${SLURM_ARRAY_TASK_ID}`
 
 with the exact formatting depending on the cluster in use.
 
-Once 1-6 have been run, the pipeline's output can then be viewed using the ''
+Once 1-6 have been run, the pipeline's output can then be viewed using the `significant_plot.ipynb` Jupyter notebook in the `Analysis` folder.
 
 ![RingFlux](/PaperPlots/pipeline.png "A flowchart depiction of the analysis pipeline.")
 
