@@ -22,15 +22,39 @@ The `Pipeline` folder contains the analysis pipeline itself. It has several subf
 - `Results` contains the results of the analysis. This folder has several subfolders. `FreeScipy` and `FreeMultinest` contain the results from fitting the free model to the data using SciPy and PyMultinest, respectively. These results include source IDs, best fit parameters, and test statistics. The `FreePostsamples` folder contains the MCMC generated postsamples (covariance information) for each significant fit. The other six folders contain the same information, but for the acceleration and blip models.
 - `Analysis` contains the core analysis scripts that are executed to run the analysis. It contains several subscripts. The file `analysis_fcns.py` contains various helper functions for executing the data analysis, like test statistic calculations. `constraint_fcns.py` contains the constraints that are imposed on SciPy when fitting the free, acceleration, and blip model to the data. `free_fit.py` reads trajectory data and source information from the `Data` and `SourceInfo` folders and then fits the free model to the data. The results are then saved to `FreeScipy` under the `Results` folder. `free_multinest.py` takes the results from `FreeScipy` and refit to the data, while also imposing the 5 sigma cutoff in free log likelihood. The results from fitting the model using MCMC are then saved to `FreeMultinest` and `FreePostsamples` in the `Results` folder. The remaining four scripts function that same way, but for the acceleration and blip models.
 
-![RingFlux](/PaperPlots/pipeline.png "A flowchart depiction of the analysis pipeline.")
-
-
 `Pipeline` also contains several helper scripts and data used by both the analysis software and the mock catalog generator. These are:
 - `dynamics_fcns.py`: functions for modeling astrometric source and lens trajectories, with and without lensing;
 - `bh_prior_fcns.py`: astrophysical black hole prior functions based on most recent observations;
 - `dm_prior_fcns.py`: compact dark matter prior functions based on a NFW profile;
 - `rotation.py`: functions for performing astrophysical coordinate transformations;
 - `coordinate_error.csv`: data for mapping the G magnitude of each source to a Gaussian error.
+
+To run the analysis, data and source information must be placed with the correct format in the `Data` and `SourceInfo` folders (see the example files in these folders for the correct formatting). Then, scripts must be run in the following order:
+1. `free_fit.py`;
+2. `free_multinest.py`
+3. `accel_fit.py`
+4. `accel_multinest.py`
+5. `blip_fit.py`
+6. `blip_multinest.py`
+where the only line that needs to be changed in each script is the `job_idx` variable. This indexes over all files in the `Data` folder and is by default set to 0. To parallelize the pipeline on a slurm-based computing cluster, one may replace `Data` with int(sys.argv[1]) and instead batch submit a job array, e.g. via
+
+`#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --time=24:00:00
+#SBATCH --mem-per-cpu=1GB
+#SBATCH --job-name=gaia-free-fit
+#SBATCH --mail-type=NONE
+#SBATCH --array=0-2
+
+module load python/intel/3.8.6
+python free_fit.py ${SLURM_ARRAY_TASK_ID}`
+
+with the exact formatting depending on the cluster in use.
+
+![RingFlux](/PaperPlots/pipeline.png "A flowchart depiction of the analysis pipeline.")
 
 ## PaperPlots
 
