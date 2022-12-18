@@ -70,6 +70,8 @@ seed_info = pd.read_csv('./SourceInfo/'+file_id+'_seeds.csv')
 # Load the file with the results from the initial fit
 scipy_results = pd.read_csv('./Results/FreeScipy/free_'+file_id+'.csv')
 
+first_sig = True
+
 for m in range(np.size(scipy_results['source_id'])):
 
     s_id = data.iat[m,0] # Source ID
@@ -248,7 +250,7 @@ for m in range(np.size(scipy_results['source_id'])):
         dataf = pd.DataFrame(data_out)
 
         if m==0: # Save w/ header if first row
-            dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
+            dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','-2ll')))
 
         else: # Else save without header
             dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=False)
@@ -341,11 +343,11 @@ for m in range(np.size(scipy_results['source_id'])):
                 
                 # Put very wide Guassians around each best fit free parameter as our inverse transform sampling prior
                 # Put very wide Guassians around each best fit free parameter as our inverse transform sampling prior
-                params[0] = inverse_gaussian_cdf(self.raprime,y0,30.)
-                params[1] = inverse_gaussian_cdf(self.decprime,y1,30.)
-                params[2] = inverse_gaussian_cdf(self.pmraprime,y2,50.)
-                params[3] = inverse_gaussian_cdf(self.pmdecprime,y3,50.)
-                params[4] = np.absolute(inverse_gaussian_cdf(self.distprime,np.min([np.absolute(y4),4500]),5000.))
+                params[0] = analysis.inverse_gaussian_cdf(self.raprime,y0,30.)
+                params[1] = analysis.inverse_gaussian_cdf(self.decprime,y1,30.)
+                params[2] = analysis.inverse_gaussian_cdf(self.pmraprime,y2,50.)
+                params[3] = analysis.inverse_gaussian_cdf(self.pmdecprime,y3,50.)
+                params[4] = np.absolute(analysis.inverse_gaussian_cdf(self.distprime,np.min([np.absolute(y4),4500]),5000.))
 
                 return params
 
@@ -419,8 +421,10 @@ for m in range(np.size(scipy_results['source_id'])):
         # Convert the output dictionary to a pandas dataframe
         dataf = pd.DataFrame(data_out)
         
-        if m==0: # Save w/ header if first row
-            dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
+        if first_sig==True: # Save w/ header if first row
+            dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','-2ll')))
+
+            first_sig = False
 
         else: # Else save without header
             dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=False)

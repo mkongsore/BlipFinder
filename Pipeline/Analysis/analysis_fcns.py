@@ -8,6 +8,7 @@ import pandas as pd
 import healpy as hp
 r = hp.rotator.Rotator(coord = ('C', 'G'))
 
+import scipy
 import scipy.constants as const
 
 from astropy import units as u
@@ -261,3 +262,8 @@ class blip_search():
         ts_signal = self._lensed_2ll(al_data,al_err,source_ra0,source_dec0,x)-2*log_joint_prob-2*log_mass_prob # no unit
 
         return ts_signal
+
+
+    def inverse_gaussian_cdf(self,x,mu,sigma): # Define the inverse gaussian cdf function to be used for inverse transform sampling
+        val = np.sqrt(2)*sigma*scipy.special.erfinv(2*x-1)+mu
+        return val
