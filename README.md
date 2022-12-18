@@ -22,6 +22,9 @@ The `Pipeline` folder contains the analysis pipeline itself. It has several subf
 - `Results` contains the results of the analysis. This folder has several subfolders. `FreeScipy` and `FreeMultinest` contain the results from fitting the free model to the data using SciPy and PyMultinest, respectively. These results include source IDs, best fit parameters, and test statistics. The `FreePostsamples` folder contains the MCMC generated postsamples (covariance information) for each significant fit. The other six folders contain the same information, but for the acceleration and blip models.
 - `Analysis` contains the core analysis scripts that are executed to run the analysis. It contains several subscripts. The file`analysis_fcns.py` contains various helper functions for executing the data analysis, like test statistic calculations.
 
+![RingFlux](/PaperPlots/pipeline.png "A flowchart depiction of the analysis pipeline.")
+
+
 `Pipeline` also contains several helper scripts and data used by both the analysis software and the mock catalog generator. These are:
 - `dynamics_fcns.py`: functions for modeling astrometric source and lens trajectories, with and without lensing;
 - `bh_prior_fcns.py`: astrophysical black hole prior functions based on most recent observations;
