@@ -31,11 +31,11 @@ The `Pipeline` folder contains the analysis pipeline itself. It has several subf
 
 To run the analysis, data and source information must be placed with the correct format in the `Data` and `SourceInfo` folders (see the example files in these folders for the correct formatting). Then, scripts must be run in the following order:
 1. `free_fit.py`;
-2. `free_multinest.py`
-3. `accel_fit.py`
-4. `accel_multinest.py`
-5. `blip_fit.py`
-6. `blip_multinest.py`
+2. `free_multinest.py`;
+3. `accel_fit.py`;
+4. `accel_multinest.py`;
+5. `blip_fit.py`;
+6. `blip_multinest.py`,
 
 where the only line that needs to be changed in each script is the `job_idx` variable. This indexes over all files in the `Data` folder and is by default set to 0. To parallelize the pipeline on a slurm-based computing cluster, one may replace `Data` with int(sys.argv[1]) and instead batch submit a job array, e.g. via the script
 
