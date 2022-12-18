@@ -47,10 +47,10 @@ priors = bh_prior_fcns.BH_priors() # Functions for black hole priors
 print('Functions Initialized')
 
 # Retrieve an integer between 0 and the number of GAIA files-1 as specified by the batch script
-job_idx = int(sys.argv[1])
+job_idx = 0 #int(sys.argv[1])
 
 # Load file containing time and scan angle information for all observations
-obs_info = pd.read_csv('../obs_info.csv', sep=",") # Read observation info csv
+obs_info = pd.read_csv('./obs_info.csv', sep=",") # Read observation info csv
 
 # Obtain general Gaia observation info from obs_info file
 t_obs = obs_info['t_obs [Julian Year]'].to_numpy() # Observation times [Julian years]
@@ -68,7 +68,7 @@ data = pd.read_pickle(data) # Load observation data from pickle file
 source_info = pd.read_csv(source_info_path+info_file_name) # Load in file containing parallax and g magnitude information
 
 # Load random seed list
-seed_info = pd.read_csv('./'+file_number+'_seeds.csv')
+seed_info = pd.read_csv('./Analysis/mock_error_seeds.csv')
 
 print('Files Loaded')
 
