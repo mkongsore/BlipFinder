@@ -49,7 +49,7 @@ where the only line that needs to be changed in each script is the `job_idx` var
 #SBATCH --mem-per-cpu=1GB
 #SBATCH --job-name=gaia-free-fit
 #SBATCH --mail-type=NONE
-#SBATCH --array=0-2
+#SBATCH --array=0-1
 
 module load python/intel/3.8.6
 python free_fit.py ${SLURM_ARRAY_TASK_ID}`
