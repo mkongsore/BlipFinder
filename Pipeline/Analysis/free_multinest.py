@@ -15,7 +15,7 @@ import sys
 import os
 
 # Import public packages
-import scipy as sp
+import scipy 
 import pandas as pd
 import numpy as np
 from pymultinest.solve import Solver
@@ -62,6 +62,7 @@ info_file_name = 'gaia_info_'+file_id+'.csv' # Initialize the name of the info f
 data = './Data/gaia_epoch_'+file_id+'.pkl' # Specify the location of the obs files
 data = pd.read_pickle(data) # Load observation data from pickle file
 source_info = pd.read_csv('./SourceInfo/'+info_file_name) # Load in file containing parallax and g magnitude information
+catalog_id_list = list(data['source_id']) # List of source IDs in the catalog
 
 # Load random seed list
 seed_info = pd.read_csv('./SourceInfo/'+file_id+'_seeds.csv')
@@ -88,13 +89,13 @@ for m in range(np.size(scipy_results['source_id'])):
         s_idx = catalog_id_list.index(int(s_id))
         
         s_row = data.iloc[s_idx] # Pick particular RA row corresponding to source of interest
-        s_info_row = misc_info_data.iloc[s_idx] # Pick the particular data file row corresponding to the source of interest
+        s_info_row = source_info.iloc[s_idx] # Pick the particular data file row corresponding to the source of interest
 
         s_ra0 = float(s_row[1]) # RA of source at first observation epoch [deg]
         s_dec0 = float(s_row[2]) # DEC of source at first observation epoch [deg]
         s_ddisp_noerr = np.array(s_row[3:]) # Change in RA [mas]
         s_dist = float(s_info_row[3]) # Estimated distance to source [pc]
-        s_gmag = float(misc_info_data.iat[s_idx,6]) # G magntiude of source
+        s_gmag = float(source_info.iat[s_idx,6]) # G magntiude of source
 
         if np.isnan(s_gmag)==True:
             s_gmag = 19.571021 # Set G magntiude to the median of the catalog if it is not available
@@ -259,13 +260,13 @@ for m in range(np.size(scipy_results['source_id'])):
         s_idx = catalog_id_list.index(int(s_id))
         
         s_row = data.iloc[s_idx] # Pick particular RA row corresponding to source of interest
-        s_info_row = misc_info_data.iloc[s_idx] # Pick the particular data file row corresponding to the source of interest
+        s_info_row = source_info.iloc[s_idx] # Pick the particular data file row corresponding to the source of interest
 
         s_ra0 = float(s_row[1]) # RA of source at first observation epoch [deg]
         s_dec0 = float(s_row[2]) # DEC of source at first observation epoch [deg]
         s_ddisp_noerr = np.array(s_row[3:]) # Change in RA [mas]
         s_dist = float(s_info_row[3]) # Estimated distance to source [pc]
-        s_gmag = float(misc_info_data.iat[s_idx,6]) # G magntiude of source
+        s_gmag = float(source_info.iat[s_idx,6]) # G magntiude of source
 
         if np.isnan(s_gmag)==True:
             s_gmag = 19.571021 # Set G magntiude to the median of the catalog if it is not available
