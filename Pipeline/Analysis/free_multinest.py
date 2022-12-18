@@ -1,80 +1,78 @@
-import os
+
+# GAIA Free Model Analysis Script
+# I-Kai Chen, Marius Kongsore, Ken Van Tilburg
+# December 2022
+
+# This file as part of a larger GitHub package
+# https://github.com/mkongsore/BlipFinder
+
+############################
+# Load Functions and Files #
+############################
+ 
+# Import system packages
 import sys
-os.chdir('/home/mk7976/git/gaiablip') # Go to the parents directory
-cwd = os.getcwd() # Retrieve directory of current running processes
-sys.path.insert(0, cwd) # Change the system path to the current running directory
+import os
 
-results_path = '/scratch/mk7976/fit_results/x1_new/free_multinest_results'
-postsamples_path = '/scratch/mk7976/fit_results/x1_new/free_postsamples' # Specify the folder to save the postsamples to
-catalog_path = '/scratch/mk7976/epoch_astrometry/lens_new' # Specify the folder to load the catalog from
-
-import dynamics_fcns as df
-import bh_prior_fcns
-import scipy
-
-priors = bh_prior_fcns.BH_priors()
-dynamics = df.Dynamics()
-
-# Change system path
-os.chdir('/home/mk7976/git/gaiablip/analysis/') # Go to the parents directory
-cwd = os.getcwd() # Retrieve directory of current running processes
-sys.path.insert(0, cwd) # Change the system path to the current running directory
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-import matplotlib as mpl
-import analysis_fcns as af
+# Import public packages
+import scipy as sp
 import pandas as pd
-
-# import PyMultiNest Solver class
+import numpy as np
 from pymultinest.solve import Solver
 
+# Import BlipFinder analysis functions
+import analysis_fcns # Import the analysis functions script
 import constraint_fcns # Import the constraint functions script
+
+# Initialize functions for statistical analysis ('black_holes' is a placeholder)
+analysis = analysis_fcns.blip_search('black_holes')
+
+# Initialize constraint functions
 free_constraints = constraint_fcns.cons_free # Tuple of functions contraining free model fitting
 
-obs_info = pd.read_csv('./obs_info.csv', sep=",", header=None, skiprows = [0]) # Read observation info csv
-obs_info.columns = ['t_obs','scan_angles'] # Specify what each column in obs_info file are
-t_obs = obs_info['t_obs'].to_numpy() # Observation times [Julian years]
-scan_angles = obs_info['scan_angles'].to_numpy() #  Scan angles [rad]
+# Import fcns scripts
+import dynamics_fcns # Import the dynamics functions script
+import bh_prior_fcns # Import the black hole prior functions script
+
+# Change system path
+sys.path.append('../')
+
+# Import BlipFinder dynamics and prior functions
+dynamics = dynamics_fcns.Dynamics() # Functions for stellar and lens motion
+priors = bh_prior_fcns.BH_priors() # Functions for black hole priors
+
+print('Functions Initialized')
+
+# Retrieve an integer between 0 and the number of GAIA files-1 as specified by the batch script
+job_idx = 0 #int(sys.argv[1])
+
+# Load file containing time and scan angle information for all observations
+obs_info = pd.read_csv('./obs_info.csv', sep=",") # Read observation info csv
+
+# Obtain general Gaia observation info from obs_info file
+t_obs = obs_info['Observation Times [Julian Year]'].to_numpy() # Observation times [Julian years]
+scan_angles = obs_info['Scan Angles [rad]'].to_numpy() #  Scan angles [rad]
 t_ref = 2017.5 # Reference time for calculating displacement [Julian years]
-n_obs = len(t_obs) # Number of observations
-dof = n_obs-5 # Degrees of freedom, number of data points minus number of parameters
 
-blip_search = af.blip_search('bh')
-catalog_list = os.listdir('/scratch/mk7976/epoch_astrometry/lens_new')
+file_name = os.listdir('./Data')[job_idx] # Pick the file name corresponding to the job to be analyzed
+file_id = str(file_name[11:24]) # Pick the data file number from the data file name
+info_file_name = 'gaia_info_'+file_id+'.csv' # Initialize the name of the info file correpsponding to the data file
 
-os.chdir('/home/mk7976/git/gaiablip/') # Go to the parents directory
-cwd = os.getcwd() # Retrieve directory of current running processes
-sys.path.insert(0, cwd) # Change the system path to the current running directory
-
-# Specify the minimum free 2LL that a source must have to be saved
-job_idx = int(sys.argv[1])
-catalog_name = os.listdir(catalog_path)[job_idx] # Pick the file name corresponding to the job to be ananalyzed
-file_number = catalog_name[18:31] # Pick the data file number from the data file name
-catalog_info_name = 'gaia_info_'+file_number+'.csv' # Anitialize the name of the info file correpsponding to the data file
-
-data = pd.read_pickle('/scratch/mk7976/epoch_astrometry/lens_new/'+catalog_name) 
-misc_info_folder = '/scratch/ic2127/gaia_edr3_info/' # Specify the location of the folder containing the file with parallax and g magnitude data
-misc_info_data = pd.read_csv(misc_info_folder+catalog_info_name) # Load in file containing parallax and g magnitude information
-
-catalog_id_list = list(data['source_id']) # List of source IDs in the catalog
+# Load data file containing the displacement-time coordinates
+data = './Data/gaia_epoch_'+file_id+'.pkl' # Specify the location of the obs files
+data = pd.read_pickle(data) # Load observation data from pickle file
+source_info = pd.read_csv('./SourceInfo/'+info_file_name) # Load in file containing parallax and g magnitude information
 
 # Load random seed list
-seed_info_folder = './analysis/seed_lists/'
-seed_info = pd.read_csv('/scratch/mk7976/seed_lists/'+file_number+'_seeds.csv')
+seed_info = pd.read_csv('./SourceInfo/'+file_id+'_seeds.csv')
 
 # Load the file with the results from the initial fit
-results = pd.read_csv('/scratch/mk7976/fit_results/x1_new/free_fit_results/free_'+file_number+'.csv')
+scipy_results = pd.read_csv('./Results/FreeScipy/free_'+file_id+'.csv')
 
-def inverse_gaussian_cdf(x,mu,sigma): # Define the inverse gaussian cdf function to be used for inverse transform sampling
-    val = np.sqrt(2)*sigma*scipy.special.erfinv(2*x-1)+mu
-    return val
-
-for m in range(np.size(results['source_id'])):
+for m in range(np.size(scipy_results['source_id'])):
 
     s_id = data.iat[m,0] # Source ID
-    results_row = results.iloc[m] # Skip header
+    results_row = scipy_results.iloc[m] # Skip header
     chisq = float(results_row[6]) # chi_square 
 
     y0 = float(results_row[1])
@@ -103,7 +101,7 @@ for m in range(np.size(results['source_id'])):
 
         np.random.seed(int(seed_info.iat[m,2])) # Set a random seed to ensure data gets scrambled in the same way every time
 
-        s_ddisp_err = blip_search.disp_err(s_gmag)
+        s_ddisp_err = analysis.disp_err(s_gmag)
         s_ddisp = np.random.normal(loc = s_ddisp_noerr,scale = s_ddisp_err) # Scramble data according to a normal distribution with 1 sigma = source_ddec_err [mas]
 
         # create Solver class
@@ -199,7 +197,7 @@ for m in range(np.size(results['source_id'])):
                 parms = np.array([ra,dec,pmra,pmdec,dist])
 
                 # calculate the model
-                ll = -blip_search.free_2ll(self._data,self._sigma,s_ra0,s_dec0,parms)
+                ll = -analysis.free_2ll(self._data,self._sigma,s_ra0,s_dec0,parms)
 
                 if np.isnan(ll)==True or np.isinf(ll)==True or dist<0:
                     ll = -1.0e100
@@ -230,7 +228,7 @@ for m in range(np.size(results['source_id'])):
         y_bf = solution.samples[-1] # Save bf parameters
 
         # Go the rest of the way home!
-        free_fit = scipy.optimize.minimize(lambda x: blip_search.free_2ll(s_ddisp,s_ddisp_err,s_ra0,s_dec0,x),
+        free_fit = scipy.optimize.minimize(lambda x: analysis.free_2ll(s_ddisp,s_ddisp_err,s_ra0,s_dec0,x),
                                      x0=y_bf, # Specify the initial guess
                                      method = 'SLSQP', # Select Sequential Least SQuares Programming based minimizer
                                      tol= 1e-7, # Set the tolarance level for what is considered a minimum
@@ -243,18 +241,18 @@ for m in range(np.size(results['source_id'])):
         free_2ll = free_fit.fun # Save the log likelihood of the free fit to the data
 
         # Save the best fit parameters and source id to a dictionary
-        data_out = {'id':[s_id],'y0':[y_bf[0]],'y1':[y_bf[1]],'y2':[y_bf[2]],'y3':[y_bf[3]],'y4':[y_bf[4]],'2ll':[free_2ll]}
+        data_out = {'id':[s_id],'y0':[y_bf[0]],'y1':[y_bf[1]],'y2':[y_bf[2]],'y3':[y_bf[3]],'y4':[y_bf[4]],'-2ll':[free_2ll]}
 
         # Convert the output dictionary to a pandas dataframe
         dataf = pd.DataFrame(data_out)
 
         if m==0: # Save w/ header if first row
-            dataf.to_csv(results_path+'/free_'+file_number+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
+            dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
 
         else: # Else save without header
-            dataf.to_csv(results_path+'/free_'+file_number+'.csv', mode='a', index=False, header=False)
+            dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=False)
 
-        np.savez(postsamples_path+'/post_'+file_number+'.npz',postsamples=postsamples) # Save the postsamples
+        np.savez('./Results/FreePostsamples/post_'+file_id+'.npz',postsamples=postsamples) # Save the postsamples
 
     elif chisq>152.: # Refit if five sigma chi_square
 
@@ -274,7 +272,7 @@ for m in range(np.size(results['source_id'])):
 
         np.random.seed(int(seed_info.iat[m,2])) # Set a random seed to ensure data gets scrambled in the same way every time
 
-        s_ddisp_err = blip_search.disp_err(s_gmag)
+        s_ddisp_err = analysis.disp_err(s_gmag)
         s_ddisp = np.random.normal(loc = s_ddisp_noerr,scale = s_ddisp_err) # Scramble data according to a normal distribution with 1 sigma = source_ddec_err [mas]
 
         # create Solver class
@@ -371,7 +369,7 @@ for m in range(np.size(results['source_id'])):
                 parms = np.array([ra,dec,pmra,pmdec,dist])
 
                 # calculate the model
-                ll = -blip_search.free_2ll(self._data,self._sigma,s_ra0,s_dec0,parms)
+                ll = -analysis.free_2ll(self._data,self._sigma,s_ra0,s_dec0,parms)
 
                 if np.isnan(ll)==True or np.isinf(ll)==True:
                     ll = -1.0e100
@@ -402,7 +400,7 @@ for m in range(np.size(results['source_id'])):
         y_bf = solution.samples[-1] # Save bf parameters
 
         # Go the rest of the way home!
-        free_fit = scipy.optimize.minimize(lambda x: blip_search.free_2ll(s_ddisp,s_ddisp_err,s_ra0,s_dec0,x),
+        free_fit = scipy.optimize.minimize(lambda x: analysis.free_2ll(s_ddisp,s_ddisp_err,s_ra0,s_dec0,x),
                                      x0=y_bf, # Specify the initial guess
                                      method = 'SLSQP', # Select Sequential Least SQuares Programming based minimizer
                                      tol= 1e-7, # Set the tolarance level for what is considered a minimum
@@ -421,26 +419,13 @@ for m in range(np.size(results['source_id'])):
         dataf = pd.DataFrame(data_out)
         
         if m==0: # Save w/ header if first row
-            dataf.to_csv(results_path+'/free_'+file_number+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
+            dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
 
         else: # Else save without header
-            dataf.to_csv(results_path+'/free_'+file_number+'.csv', mode='a', index=False, header=False)
+            dataf.to_csv('./Results/FreeMultinest/free_'+file_id+'.csv', mode='a', index=False, header=False)
 
-        np.savez(postsamples_path+'/post_'+file_number+'.npz',postsamples=postsamples) # Save the postsamples
+        np.savez('./Results/FreePostsamples/post_'+file_id+'.npz',postsamples=postsamples) # Save the postsamples
 
     else:
-
-        # Save the best fit parameters and source id to a dictionary
-        data_out = {'id':[s_id],'y0':[y[0]],'y1':[y[1]],'y2':[y[2]],'y3':[y[3]],'y4':[y[4]],'2ll':[chisq]}
-
-        # Convert the output dictionary to a pandas dataframe
-        dataf = pd.DataFrame(data_out)
-        
-
-        if m==0: # Save w/ header if first row
-            dataf.to_csv(results_path+'/free_'+file_number+'.csv', mode='a', index=False, header=(('s_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
-
-        else: # Else save without header
-            dataf.to_csv(results_path+'/free_'+file_number+'.csv', mode='a', index=False, header=False)
-
+        continue
 print('Analysis Complete')
