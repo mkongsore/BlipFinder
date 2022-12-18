@@ -9,11 +9,6 @@
 # Load Functions and Files #
 ############################
  
-# File paths
-data_path = '../Data' # Specify folder to load data from
-source_info_path = '../SourceInfo' # Specift path to read EDR3 source info from
-results_path = '../Results/FreeScipy' # Specify path to save results to
-
 # Import system packages
 import sys
 import os
@@ -53,22 +48,22 @@ job_idx = 0 #int(sys.argv[1])
 obs_info = pd.read_csv('./obs_info.csv', sep=",") # Read observation info csv
 
 # Obtain general Gaia observation info from obs_info file
-t_obs = obs_info['t_obs [Julian Year]'].to_numpy() # Observation times [Julian years]
+t_obs = obs_info['Observation Times [Julian Year]'].to_numpy() # Observation times [Julian years]
 scan_angles = obs_info['Scan Angles [rad]'].to_numpy() #  Scan angles [rad]
 t_ref = 2017.5 # Reference time for calculating displacement [Julian years]
 
-file_name = os.listdir(catalog_path)[job_idx] # Pick the file name corresponding to the job to be analyzed
+file_name = os.listdir('./Data')[job_idx] # Pick the file name corresponding to the job to be analyzed
 file_id = str(file_name[11:24]) # Pick the data file number from the data file name
 info_file_name = 'gaia_info_'+file_id+'.csv' # Initialize the name of the info file correpsponding to the data file
 
 
 # Load data file containing the displacement-time coordinates
-data = data_path+'/gaia_epoch_'+file_id+'.pkl' # Specify the location of the obs files
+data = './Data/gaia_epoch_'+file_id+'.pkl' # Specify the location of the obs files
 data = pd.read_pickle(data) # Load observation data from pickle file
-source_info = pd.read_csv(source_info_path+info_file_name) # Load in file containing parallax and g magnitude information
+source_info = pd.read_csv('./SourceInfo/'+info_file_name) # Load in file containing parallax and g magnitude information
 
 # Load random seed list
-seed_info = pd.read_csv('./Analysis/mock_error_seeds.csv')
+seed_info = pd.read_csv('./SourceInfo/'+file_id+'_seeds.csv')
 
 print('Files Loaded')
 
@@ -82,7 +77,7 @@ print('Analysis Loop Commenced')
 for n in np.arange(0,np.shape(data)[0]): # n is the row number
 
     s_data_row = data.iloc[n] # Pick particular catalog  row corresponding to source of interest
-    s_info_row = misc_info_data.iloc[n] # Pick the particular data file row corresponding to the source of interest
+    s_info_row = source_info.iloc[n] # Pick the particular data file row corresponding to the source of interest
 
     s_id = data.iat[n,0] # Specify the source ID
     s_ra0 = float(s_data_row[1]) # RA of source at first observation epoch [deg]
@@ -134,8 +129,8 @@ for n in np.arange(0,np.shape(data)[0]): # n is the row number
     # Save the output to a csv file corresponding to the datafile the source is in to scratch
 
     if n==0: # Save w/ header if first row
-        dataf.to_csv(results_path+'/free_'+file_number+'.csv', mode='a', index=False, header=(('source_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
+        dataf.to_csv('./Results/FreeScipy/free_'+file_id+'.csv', mode='a', index=False, header=(('source_id','delta_ra0 [mas]','delta_dec0 [mas]','pm_ra [mas/yr]','pm_dec[mas/yr]','dist [pc]','ts')))
     else: # Else save without header
-        dataf.to_csv(results_path+'/free_'+file_number+'.csv', mode='a', index=False, header=False)
+        dataf.to_csv('./Results/FreeScipy/free_'+file_id+'.csv', mode='a', index=False, header=False)
 
 print('Free Fit Complete')
