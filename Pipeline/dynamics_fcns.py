@@ -198,6 +198,49 @@ class Dynamics():
 
         return self._al_disp(ra_ar, dec_ar)
 
+
+    def lensed_AL_mag(self, ra_s, dec_s, pmra_s, pmdec_s, dist_s,
+                        ra_l, dec_l, pmra_l, pmdec_l, dist_l, mass):
+        """
+        A method for computing the AL displacement of an object in the sky
+        at all observation times given its 11 parameter lensed astrometric solutions.
+
+        Parameters
+        ----------
+        ra_s : float
+            reference RA of the source [degrees]
+        dec_s : float
+            reference DEC of the source [degrees]
+        pmra_s : float
+            proper motion in the RA* direction of the source [mas/yr]
+        pmdec_s : float
+            proper motion in the DEC direction of the source [mas/yr]
+        dist_s : float
+            distance to the source [pc]
+        ra_l : float
+            reference RA of the lens [degrees]
+        dec_l : float
+            reference DEC of the lens [degrees]
+        pmra_l : float
+            proper motion in the RA* direction of the lens [mas/yr]
+        pmdec_l : float
+            proper motion in the DEC direction of the lens [mas/yr]
+        dist_l : float
+            distance to the lens [pc]
+        mass : float
+            mass of the lens
+
+        Returns
+        -------
+        Array of along scan displacements in mas
+        """
+
+        ra_ar, dec_ar, mag = self._traj_lensed_mag(ra_s, dec_s, pmra_s, pmdec_s, dist_s,
+                                     ra_l, dec_l, pmra_l, pmdec_l, dist_l, mass)
+
+        return self._al_disp(ra_ar, dec_ar), mag
+
+
     def binary_AL(self, ra0, dec0, pmra, pmdec, dist, r_sep, mass, m_dark, ecc, theta, phi, psi, t0):
         """
         A method for computing the AL displacement of an object in the sky
@@ -510,6 +553,72 @@ class Dynamics():
         s_dec_lensed = s_dec + d_dec
 
         return s_ra_lensed, s_dec_lensed
+
+
+    def _traj_lensed_mag(self, ra_s, dec_s, pmra_s, pmdec_s, dist_s,
+                                 ra_l, dec_l, pmra_l, pmdec_l, dist_l, mass):
+        """
+        A method to calculate the 2D trjectory of an object that is deflected by
+        a lens.
+
+        Parameters
+        ----------
+        ra_s : float
+            reference RA of the source [degrees]
+        dec_s : float
+            reference DEC of the source [degrees]
+        pmra_s : float
+            proper motion in the RA* direction of the source [mas/yr]
+        pmdec_s : float
+            proper motion in the DEC direction of the source [mas/yr]
+        dist_s : float
+            distance to the source [pc]
+        ra_l : float
+            reference RA of the lens [degrees]
+        dec_l : float
+            reference DEC of the lens [degrees]
+        pmra_l : float
+            proper motion in the RA* direction of the lens [mas/yr]
+        pmdec_l : float
+            proper motion in the DEC direction of the lens [mas/yr]
+        dist_l : float
+            distance to the lens [pc]
+        mass : float
+            mass of the lens
+
+        Returns
+        -------
+        tuple of arrays of the trajectory of the object given the 11 parameters
+        lensed astrometric solution.
+        """
+
+        # Calculate the source trajectory
+        s_ra, s_dec = self._trajectory(ra_s, dec_s, pmra_s, pmdec_s, dist_s)
+        # Calculate the lens trajectory
+        l_ra, l_dec = self._trajectory(ra_l, dec_s, pmra_l, pmdec_l, dist_l)
+
+        eins_r = _eins_r(mass, dist_s, dist_l)
+
+        # impact parameter in the RA* direction [mas]
+        b_ra = s_ra - l_ra + (ra_s - ra_l)*np.cos(dec_s*const.degree)*3600*1000
+        # impact parameter in the DEC direction [mas]
+        b_dec = s_dec - l_dec + (dec_s - dec_l)*3600*1000
+
+        u_ra = b_ra/eins_r
+        u_dec = b_dec/eins_r
+        u_sq = u_ra**2 + u_dec**2
+
+        mag = (u_sq + 2)/np.sqrt(u_sq*(u_sq + 4))
+        mag = -2.5*np.log10(mag)
+
+        # Calculate the angular deflection
+        d_ra = eins_r*u_ra/(u_sq + 2)
+        d_dec = eins_r*u_dec/(u_sq + 2)
+
+        s_ra_lensed = s_ra + d_ra
+        s_dec_lensed = s_dec + d_dec
+
+        return s_ra_lensed, s_dec_lensed, mag
 
     def _binary_correction(self, r_sep, mass, m_dark, ecc, theta, phi, psi, t0):
         """

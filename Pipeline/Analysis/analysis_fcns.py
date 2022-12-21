@@ -156,7 +156,7 @@ class blip_search():
         return ll
 
     def _lensed_2ll(self,al_data,al_err,source_ra0,source_dec0,x):
-    
+
         """
         Computes the log likelihood for a given data set and a given lensing model.
 
@@ -197,7 +197,52 @@ class blip_search():
         ll = np.sum(((data_res)/al_err)**2) # no unit
 
         return ll
-        
+
+
+    def _lensed_2ll_mag(self,al_data,al_err,source_ra0,source_dec0,mag_data,mag_err,x):
+
+        """
+        Computes the log likelihood for a given data set and a given lensing model.
+
+        Parameters
+        ----------
+        al_data : array
+             along scan displacement data points for a single event [mas]
+        al_err : array
+             along scan displacement errors for a single event [mas]
+        x : array
+            array of float parameters to be passed to the "lensed_AL" function. These are
+            ra_s [mas], dec_s [mas], pmra_s [mas/yr], pmdec_s [mas/yr], dist_s [pc],
+            ra_l [mas], dec_l [mas], pmra_l [mas/yr], pmdec_l [mas/yr], dist_l [pc],
+            mass [solar masses].
+
+        Returns
+        -------
+        Log likelihood of model+data
+
+        """
+        # Extract model parameters from parameter array
+        ra_s,dec_s,pmra_s,pmdec_s,dist_s,ra_l,dec_l,pmra_l,pmdec_l,dist_l,mass = x
+
+        d_ra_l = (ra_l-ra_s)/3600/1000/np.cos(source_dec0*np.pi/180) # [deg]
+        d_dec_l = (dec_l-dec_s)/3600/1000 # [deg]
+
+        # Compute the AL location of the source according to the lensed model
+        al_traj, mag = self.dynamics.lensed_AL_mag(source_ra0,source_dec0,pmra_s,pmdec_s,dist_s,
+            source_ra0+d_ra_l,source_dec0+d_dec_l,pmra_l,pmdec_l,dist_l,mass) # [mas]
+
+        # Compute the AL offset
+        al_offset = np.sin(scan_angles)*x[0]+np.cos(scan_angles)*x[1] # [mas]
+
+        # Compute the difference in AL coordinates between the data and the unlensed model
+        data_res = al_traj+al_offset-al_data # [mas]
+
+        # Compute th two log likelihood of the lensing model
+        ll = np.sum(((data_res)/al_err)**2) + np.sum(((mag - mag_data)/al_err)**2)# no unit
+
+        return ll
+
+
     def llr(self,al_data,al_err,ll_null,source_ra0,source_dec0,x):
         """
         Computes the log likelihood ratio of two models (typically signal and null)
