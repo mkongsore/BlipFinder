@@ -61,7 +61,7 @@ with the exact formatting depending on the cluster in use.
 
 Once 1-6 have been run, the pipeline's output can then be viewed using the `significant_plot.ipynb` Jupyter notebook in the `Analysis` folder.
 
-![RingFlux](/PaperPlots/pipeline.png "A flowchart depiction of the analysis pipeline.")
+![RingFlux](/PaperPlots/blipfinder-pipeline.png "A flowchart depiction of the analysis pipeline.")
 
 ## PaperPlots
 
