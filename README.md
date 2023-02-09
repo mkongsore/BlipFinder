@@ -29,7 +29,7 @@ The `Pipeline` folder contains the analysis pipeline itself. It has several subf
 - `dm_prior_fcns.py`: compact dark matter prior functions based on a NFW profile;
 - `rotation.py`: functions for performing astrophysical coordinate transformations;
 - `coordinate_error.csv`: data for mapping the G magnitude of each source to a Gaussian error.
-- `yellin.py`: contains the function that compute the exclusion confidence level following the optimal interval method specified in [0203002] (https://arxiv.org/abs/physics/0203002)
+- `yellin.py`: contains the function that compute the exclusion confidence level following the optimal interval method specified in [0203002](https://arxiv.org/abs/physics/0203002)
 
 To run the analysis, data and source information must be placed with the correct format in the `Data` and `SourceInfo` folders (see the example files in these folders for the correct formatting). Then, scripts must be run in the following order:
 1. `free_fit.py`;
