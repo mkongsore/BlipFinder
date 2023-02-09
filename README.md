@@ -65,4 +65,4 @@ Once 1-6 have been run, the pipeline's output can then be viewed using the `sign
 
 ## PaperPlots
 
-The `PaperPlots` folder contains the Jupyter Notebook scripts used to generate the plots shown in [2301.00822)](https://arxiv.org/abs/2301.00822).
+The `PaperPlots` folder contains the Jupyter Notebook scripts used to generate the plots shown in [2301.00822](https://arxiv.org/abs/2301.00822).
