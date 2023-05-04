@@ -24,20 +24,14 @@ sys.path.insert(0, cwd)
 import dynamics_fcns
 import bh_prior_fcns
 
-# Load file containing time and scan angle information for all observations
-obs_info = pd.read_csv('./obs_info.csv', sep=",", header=None, skiprows = [0])
-obs_info.columns = ['t_obs','scan_angles']
-t_obs = obs_info['t_obs'].to_numpy() # Observation times [Julian years]
-scan_angles = obs_info['scan_angles'].to_numpy() #  Scan angles [rad]
-t_ref = 2017.5 # Reference time for calculating displacement [Julian years]
-n_obs = len(t_obs) # Number of observations
+
 
 class blip_search():
     """
     A class containing all functions used for mono blip searches.
     """
 
-    def __init__(self,object_type):
+    def __init__(self,object_type,obs_file):
 
         """"
         Class constructor. Sets the type of lens to be searched for (currently only BH).
@@ -49,7 +43,7 @@ class blip_search():
         """
 
         # Initialize dyanmics and priors classes
-        self.dynamics = dynamics_fcns.Dynamics() # Initialize the Dyanmics class
+        self.dynamics = dynamics_fcns.Dynamics(obs_info = obs_file) # Initialize the Dyanmics class
         self.priors = bh_prior_fcns.BH_priors() # Initialize the BH_priors class
 
     def disp_err(self,gmag): #
@@ -106,7 +100,7 @@ class blip_search():
 
         # Compute AL object location based on unlens_AL function
         al_traj =  self.dynamics.unlens_AL(ra0,dec0,pmra,pmdec,dist) # [mas]
-        al_offset = np.sin(scan_angles)*x[0]+np.cos(scan_angles)*x[1] # [mas]]
+        al_offset = np.sin(self.dynamics.scan_angles)*x[0]+np.cos(self.dynamics.scan_angles)*x[1] # [mas]]
 
         # Compute difference between data and model AL coordinates
         data_res = al_traj+al_offset-al_data # [mas]
@@ -145,7 +139,7 @@ class blip_search():
 
         # Compute AL object location based on unlens_AL function
         al_traj =  self.dynamics.unlens7p_AL(ra0,dec0,pmra,pmdec,dist,accra,accdec) # [mas]
-        al_offset = np.sin(scan_angles)*x[0]+np.cos(scan_angles)*x[1] # [mas]
+        al_offset = np.sin(self.dynamics.scan_angles)*x[0]+np.cos(self.dynamics.scan_angles)*x[1] # [mas]
 
         # Compute difference between data and model AL coordinates
         data_res = al_traj+al_offset-al_data # [mas]
@@ -188,7 +182,7 @@ class blip_search():
             source_ra0+d_ra_l,source_dec0+d_dec_l,pmra_l,pmdec_l,dist_l,mass) # [mas]
 
         # Compute the AL offset
-        al_offset = np.sin(scan_angles)*x[0]+np.cos(scan_angles)*x[1] # [mas]
+        al_offset = np.sin(self.dynamics.scan_angles)*x[0]+np.cos(self.dynamics.scan_angles)*x[1] # [mas]
 
         # Compute the difference in AL coordinates between the data and the unlensed model
         data_res = al_traj+al_offset-al_data # [mas]
@@ -232,7 +226,7 @@ class blip_search():
             source_ra0+d_ra_l,source_dec0+d_dec_l,pmra_l,pmdec_l,dist_l,mass) # [mas]
 
         # Compute the AL offset
-        al_offset = np.sin(scan_angles)*x[0]+np.cos(scan_angles)*x[1] # [mas]
+        al_offset = np.sin(self.dynamics.scan_angles)*x[0]+np.cos(self.dynamics.scan_angles)*x[1] # [mas]
 
         # Compute the difference in AL coordinates between the data and the unlensed model
         data_res = al_traj+al_offset-al_data # [mas]
