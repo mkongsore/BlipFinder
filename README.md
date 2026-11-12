@@ -14,6 +14,13 @@ If this pipeline is used in published work, please cite [2301.00822](https://arx
 - Marius Kongsore
 - Ken Van Tilburg
 
+## Installation
+
+```
+conda env create -f environment.yml
+conda activate blipfinder
+```
+
 ## Pipeline
 
 The `Pipeline` folder contains the analysis pipeline itself. It has several subfolders:

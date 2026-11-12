@@ -1,0 +1,20 @@
+# conda env create -f environment.yml && conda activate blipfinder
+name: blipfinder
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - multinest  # compiled library needed by pymultinest; not on PyPI
+  - pip
+  - pip:
+      - numpy<2
+      - pandas<3  # scripts index Series positionally, which pandas 3 rejects
+      - scipy
+      - astropy
+      - healpy
+      - galpy
+      - matplotlib
+      - corner
+      - jupyter
+      - pymultinest
+      - pygaia
